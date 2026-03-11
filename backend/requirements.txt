@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+crewai
+langchain-ollama
+python-dotenv
+pydantic
+langchain
+pypdf
+python-multipart
+litellm

@@ -1,6 +1,7 @@
 from crewai import Agent, Task, Crew, Process
 from crewai.tools import BaseTool
 from .ollama_config import get_ollama_llm
+from .tools.search_tools import candidate_search_tool, profile_scraper_tool
 
 class SearchJobTrendsTool(BaseTool):
     name: str = "search_job_trends"
@@ -27,12 +28,15 @@ def run_resume_analysis_crew(resume_content: str, jd_content: str = "", step_cal
     recruiter = Agent(
         role='Grandmaster Recruiter (Chuyên gia soi CV 20 năm)',
         goal='Tìm ra mọi lỗi sai và đánh giá khắt khe CV {resume_content} dựa trên JD {jd_content}',
-        backstory="""Bạn là một 'huyền thoại' trong giới tuyển dụng. Bạn không có sự thương hại. 
-        Bạn sẽ băm vằn CV thành từng mảnh nếu nó không đạt chuẩn 2025. 
-        Bạn chuyên tìm Red Flags và đánh giá các yếu tố: Experience, Projects, Awards.""",
+        backstory="""Bạn là một 'huyền thoại' trong giới tuyển dụng. Bạn không có sự thương hại nhưng cực kỳ công bằng. 
+        Bạn chuyên tìm Red Flags và đánh giá các yếu tố: Experience, Projects, Awards.
+        Bạn có khả năng kiểm chứng thông tin online. TUYỆT ĐỐI ƯU TIÊN các link chính chủ (LinkedIn, GitHub, Portfolio) có trong CV.
+        Nếu phải tìm kiếm bên ngoài, bạn phải cực kỳ cẩn thận với các kết quả trùng tên nhưng không liên quan đến ngành nghề (ví dụ: phim ảnh, giải trí). 
+        Không được phép đánh giá tiêu cực (Red Flag) nếu không có bằng chứng chắc chắn kết quả đó thuộc về ứng viên.""" ,
         verbose=True,
         allow_delegation=False,
         llm=llm,
+        tools=[candidate_search_tool, profile_scraper_tool, search_tool],
         step_callback=agent_step_callback
     )
 
@@ -41,6 +45,11 @@ def run_resume_analysis_crew(resume_content: str, jd_content: str = "", step_cal
         description=f"""Hãy phân tích CV và JD sau đây một cách cực kỳ khắt khe:
         CV: {resume_content}
         JD: {jd_content}
+        
+        QUY TRÌNH KIỂM CHỨNG (BẮT BUỘC):
+        1. KIỂM TRẢ LINK: Nếu CV có link (GitHub, LinkedIn, Website), hãy dùng tool 'scrape_profile_content' để đọc nội dung ngay lập tức. Đây là nguồn tin cậy nhất.
+        2. TÌM KIẾM BỔ SUNG: Chỉ dùng 'search_candidate_online' để tìm thông tin về các giải thưởng hoặc dự án được nhắc tên trong CV.
+        3. CẢNH BÁO HALLUCINATION: Nếu kết quả tìm kiếm trả về các thông tin không liên quan (như phim ảnh, tin tức giải trí), HÃY BỎ QUA. Không được liệt kê chúng vào Red Flags.
         
         YÊU CẦU ĐẦU RA (BẮT BUỘC):
         Bạn phải trả về một JSON object nằm trong thẻ <result>...</result> với các trường:

@@ -8,3 +8,6 @@ langchain
 pypdf
 python-multipart
 litellm
+duckduckgo-search
+crewai-tools
+langchain-community

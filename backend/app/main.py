@@ -96,12 +96,17 @@ async def analyze_resume_stream(file: UploadFile = File(...), jd: str = None):
     async def event_generator():
         while True:
             try:
-                # Chờ log mới từ queue
-                item = await asyncio.to_thread(log_queue.get, timeout=60)
+                # Tăng timeout lên 300 giây (5 phút) vì cào web và suy nghĩ tốn thời gian
+                item = await asyncio.to_thread(log_queue.get, timeout=300)
                 if item is None:
                     break
                 yield f"data: {json.dumps(item, ensure_ascii=False)}\n\n"
             except queue.Empty:
+                # Nếu quá lâu không có gì, gửi một gói 'ping' để giữ kết nối browser không bị ngắt
+                yield f"data: {json.dumps({'type': 'ping', 'content': 'keep-alive'}, ensure_ascii=False)}\n\n"
+                continue
+            except Exception as e:
+                yield f"data: {json.dumps({'type': 'error', 'content': f'Lỗi luồng dữ liệu: {str(e)}'}, ensure_ascii=False)}\n\n"
                 break
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

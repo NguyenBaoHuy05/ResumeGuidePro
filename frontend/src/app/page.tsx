@@ -177,7 +177,7 @@ export default function V4Dashboard() {
              <Target className="w-5 h-5 text-white" />
           </div> */}
           <h2 className="text-slate-900 text-xl font-black tracking-tight">
-            ResumeRanker{" "}
+            ResumeGuidePro{" "}
             <span className="text-blue-600 text-[10px] align-top px-1.5 py-0.5 bg-blue-50 rounded-full">
               v0.3
             </span>
